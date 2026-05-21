@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Score Game</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .game {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+    }
+    .word-card, .score-card {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+    }
+    .word-card { padding: 10px; }
+    .word-button {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      background: white;
+      border-radius: 18px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .word-top {
+      background: #020617;
+      color: white;
+      border-radius: 16px;
+      padding: 10px;
+      transform: rotate(180deg);
+    }
+    .word-bottom { margin-top: 16px; }
+    .word-text {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #64748b;
+      text-align: center;
+    }
+    .score-card {
+      flex: 1;
+      overflow: hidden;
+      padding: 8px;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    button {
+      border: none;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .control-button {
+      height: 36px;
+      padding: 0 12px;
+      background: #e2e8f0;
+      color: #0f172a;
+      font-size: 13px;
+    }
+    .rows {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 55vh;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 40px minmax(72px, 96px) 1fr 40px;
+      gap: 4px;
+      align-items: center;
+    }
+    .move-button {
+      height: 34px;
+      width: 40px;
+      background: #e2e8f0;
+      color: #0f172a;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .name-input {
+      height: 34px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 0 8px;
+      font-weight: 700;
+      font-size: 12px;
+      min-width: 0;
+    }
+    .track {
+      display: grid;
+      grid-template-columns: repeat(15, 1fr);
+      gap: 2px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 2px;
+    }
+    .space {
+      height: 28px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      position: relative;
+      overflow: hidden;
+    }
+    .marker {
+      position: absolute;
+      inset: 1px;
+      background: #020617;
+      color: white;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 9px;
+      font-weight: 900;
+      line-height: 1;
+      padding: 1px;
+      overflow: hidden;
+    }
+    .winner-screen {
+      height: 100vh;
+      background: #020617;
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 18px;
+    }
+    .winner-box {
+      width: 100%;
+      max-width: 900px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      border-radius: 28px;
+      padding: 28px;
+    }
+    .winner-title {
+      font-size: clamp(1.8rem, 6vw, 4rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      opacity: 0.85;
+    }
+    .winner-name {
+      margin-top: 24px;
+      font-size: clamp(4rem, 16vw, 9rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+    .winner-message {
+      margin-top: 20px;
+      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      font-weight: 800;
+      opacity: 0.85;
+    }
+    .play-again {
+      margin-top: 28px;
+      height: 48px;
+      padding: 0 28px;
+      background: white;
+      color: #020617;
+      font-size: 18px;
+    }
+    @media (max-width: 600px) {
+      .game { padding: 5px; gap: 5px; }
+      .word-card { padding: 6px; }
+      .word-button { padding: 7px; }
+      .word-bottom { margin-top: 10px; }
+      .score-card { padding: 5px; }
+      .control-button { height: 32px; font-size: 11px; padding: 0 8px; }
+      .row { grid-template-columns: 34px minmax(58px, 74px) 1fr 34px; gap: 2px; }
+      .move-button { height: 30px; width: 34px; font-size: 18px; }
+      .name-input { height: 30px; font-size: 10px; padding: 0 5px; }
+      .space { height: 23px; }
+      .marker { font-size: 8px; }
+      .rows { max-height: 58vh; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" id="game">
+    <section class="word-card">
+      <button class="word-button" onclick="nextWord()" aria-label="Show another random word">
+        <div class="word-top"><div class="word-text" id="wordTop"></div></div>
+        <div class="word-bottom"><div class="word-text" id="wordBottom"></div></div>
+        <div class="hint">Tap the word to show another word</div>
+      </button>
+    </section>
+
+    <section class="score-card">
+      <div class="controls">
+        <button class="control-button" onclick="clearNames()">Clear names</button>
+        <button class="control-button" onclick="resetScores()">Reset scores</button>
+        <button class="control-button" onclick="nextWord()">New word</button>
+      </div>
+      <div class="rows" id="rows"></div>
+    </section>
+  </main>
+
+  <section class="winner-screen" id="winnerScreen">
+    <div class="winner-box">
+      <div class="winner-title">Congratulations!</div>
+      <div class="winner-name" id="winnerName"></div>
+      <div class="winner-message">You made it to the finish!</div>
+      <button class="play-again" onclick="resetScores()">Play again</button>
+    </div>
+  </section>
+
+  <script>
+    const WORDS = ["Love","Heart","Feel","Cry","Smile","Pain","Fear","Hope","Dream","Tear","Alone","Lonely","Happy","Sad","Hate","Miss","Wish","Joy","Peace","Mad","Glad","Proud","Sweet","Cold","Warm","Dark","Light","Blind","Free","You","Me","I","We","They","He","She","Us","Them","Baby","Girl","Boy","Man","Woman","Mother","Father","Friend","Enemy","Lover","Stranger","Angel","Devil","Queen","King","Hero","Star","Soul","Child","Mind","Time","Day","Night","Morning","Evening","Always","Never","Forever","Now","Then","Soon","Today","Yesterday","Tomorrow","Year","Life","World","Earth","Sky","Home","Place","Road","Street","City","Way","Path","Here","There","Where","Go","Come","Run","Walk","Dance","Sing","Say","Talk","Listen","Look","See","Hear","Touch","Taste","Breathe","Laugh","Sleep","Wake","Stand","Fall","Fly","Rise","Wait","Stop","Hold","Keep","Let","And","Or","But","So","Because","If","With","Without","For","To","In","On","At","By","From","Out","Up","Down","Over","Under","Through","About","Like","As","Than","Not","Yes","No","Maybe","Yeah","Oh","Hey","Ah","U","Ya","Just","Really","Very","Well","Woah","Damn","Shh","Ahh","Come-on","Do","Did","Done","Be","Am","Is","Are","Was","Were","Been","Have","Has","Had","Will","Would","Can","Could","Should","Must","May","Might","Want","Need","Think","Know","Believe","Remember","Forget","Good","Bad","Big","Small","Little","Tall","Short","Long","Fast","Slow","Hard","Soft","True","False","Real","Fake","Right","Wrong","High","Low","New","Old","Young","Rich","Poor","Bright","Dim","Loud","Quiet"];
+    const ROWS = 8;
+    const SPACES = 15;
+    let currentWord = "";
+    let positions = Array(ROWS).fill(0);
+    let names = Array(ROWS).fill("");
+
+    function randomWord() {
+      if (WORDS.length === 0) return "Word";
+      if (WORDS.length === 1) return WORDS[0];
+      let next = currentWord;
+      while (next === currentWord) {
+        next = WORDS[Math.floor(Math.random() * WORDS.length)];
+      }
+      return next;
+    }
+
+    function nextWord() {
+      currentWord = randomWord();
+      document.getElementById("wordTop").textContent = currentWord;
+      document.getElementById("wordBottom").textContent = currentWord;
+    }
+
+    function renderRows() {
+      const rows = document.getElementById("rows");
+      rows.innerHTML = "";
+      for (let row = 0; row < ROWS; row++) {
+        const rowEl = document.createElement("div");
+        rowEl.className = "row";
+
+        const minus = document.createElement("button");
+        minus.className = "move-button";
+        minus.textContent = "−";
+        minus.onclick = () => moveMarker(row, -1);
+
+        const input = document.createElement("input");
+        input.className = "name-input";
+        input.placeholder = `Player ${row + 1}`;
+        input.value = names[row];
+        input.oninput = () => {
+          names[row] = input.value;
+          renderRows();
+        };
+
+        const track = document.createElement("div");
+        track.className = "track";
+        for (let space = 0; space < SPACES; space++) {
+          const spaceEl = document.createElement("div");
+          spaceEl.className = "space";
+          if (positions[row] === space) {
+            const marker = document.createElement("div");
+            marker.className = "marker";
+            marker.textContent = names[row] || String(row + 1);
+            spaceEl.appendChild(marker);
+          }
+          track.appendChild(spaceEl);
+        }
+
+        const plus = document.createElement("button");
+        plus.className = "move-button";
+        plus.textContent = "+";
+        plus.onclick = () => moveMarker(row, 1);
+
+        rowEl.appendChild(minus);
+        rowEl.appendChild(input);
+        rowEl.appendChild(track);
+        rowEl.appendChild(plus);
+        rows.appendChild(rowEl);
+      }
+    }
+
+    function moveMarker(row, direction) {
+      const oldPosition = positions[row];
+      positions[row] = Math.max(0, Math.min(SPACES - 1, positions[row] + direction));
+      renderRows();
+      if (positions[row] === SPACES - 1 && oldPosition !== SPACES - 1) {
+        showWinner(names[row] || `Player ${row + 1}`);
+      }
+    }
+
+    function clearNames() {
+      names = Array(ROWS).fill("");
+      renderRows();
+    }
+
+    function resetScores() {
+      positions = Array(ROWS).fill(0);
+      document.getElementById("game").style.display = "flex";
+      document.getElementById("winnerScreen").style.display = "none";
+      renderRows();
+    }
+
+    function showWinner(name) {
+      document.getElementById("winnerName").textContent = name;
+      document.getElementById("game").style.display = "none";
+      document.getElementById("winnerScreen").style.display = "flex";
+    }
+
+    nextWord();
+    renderRows();
+  </script>
+</body>
+</html>
